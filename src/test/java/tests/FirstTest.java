@@ -1,26 +1,38 @@
 package tests;
 
-
-
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.MobileElement;
+import io.appium.java_client.TouchAction;
 import io.appium.java_client.remote.AndroidMobileCapabilityType;
 import io.appium.java_client.remote.MobileCapabilityType;
+import io.appium.java_client.touch.WaitOptions;
+import io.appium.java_client.touch.offset.PointOption;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.ScreenOrientation;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
-import sun.rmi.runtime.Log;
-
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 
 public class FirstTest {
     private AppiumDriver<MobileElement> driver;
+
+    private enum Scroll {
+        UP,
+        DOWN
+    }
+
+    private enum SwipeDirection {
+        LEFT, RIGHT
+    }
 
     @BeforeTest
     public void setUp() throws MalformedURLException {
@@ -29,13 +41,11 @@ public class FirstTest {
         caps.setCapability(MobileCapabilityType.PLATFORM_NAME, "Android");
         caps.setCapability(MobileCapabilityType.PLATFORM_VERSION, "8.1");
         caps.setCapability(MobileCapabilityType.DEVICE_NAME, "AndroidTest");
-        caps.setCapability(AndroidMobileCapabilityType.APP_PACKAGE, "org.wikipedia");
-        caps.setCapability(AndroidMobileCapabilityType.APP_ACTIVITY, "org.wikipedia.main.MainActivity");
-        caps.setCapability(MobileCapabilityType.APP, "C:\\Users\\ahalt\\IdeaProjects\\qa_mobile_auto_akhalturin01\\src\\test\\resources\\Apps\\wiki.apk");
-
+        caps.setCapability(AndroidMobileCapabilityType.APP_PACKAGE, "com.afollestad.materialdialogssample");
+        caps.setCapability(AndroidMobileCapabilityType.APP_ACTIVITY, "com.afollestad.materialdialogssample.MainActivity");
+        caps.setCapability(MobileCapabilityType.APP, "C:\\Users\\ahalt\\IdeaProjects\\qa_mobile_auto_akhalturin01\\src\\test\\resources\\Apps\\sample.apk");
         URL appiumURL = new URL("http://127.0.0.1:4723/wd/hub");
         driver = new AppiumDriver<MobileElement>(appiumURL, caps);
-        SkipIntro();
 
     }
     @AfterTest
@@ -44,57 +54,122 @@ public class FirstTest {
     }
 
     @Test
-    public void searchTest() throws InterruptedException {
-        WebElement Search = waitForElement(By.xpath("//*[contains(@text, 'Search Wikipedia')]"), 5);
-        Search.click();
-        WebElement SearchTextInput = waitForElement(By.id("search_src_text"), 5);
-        SearchTextInput.click();
-        SearchTextInput.sendKeys("google");
+    public void PopUpNotExists() throws InterruptedException {
+        WebElement BasicStackedBtn = waitForElement(By.id("basic_stacked_buttons"), 5);
+        BasicStackedBtn.click();
+        WebElement MdBtnNgtv = waitForElement(By.id("md_button_negative"), 5);
+        MdBtnNgtv.click();
         Thread.sleep(2000);
-        SearchTextInput.clear();
-        Thread.sleep(2000);
+        Assert.assertEquals(waitForElementNotExists(By.id("md_button_negative"), 5), true, "md_button_negative' not exists");
     }
 
     @Test
-    public void openSettings() {
-        WebElement OptionsBtn = waitForElement(By.id("drawer_icon_menu"), 5);
-        OptionsBtn.click();
-        WebElement SettingsBtn = waitForElement(By.id("main_drawer_settings_container"), 5);
-        SettingsBtn.click();
-        WebElement BackBtn = waitForElement(By.xpath("//*[contains(@content-desc, 'Navigate up')]"), 5);
-        BackBtn.click();
+    public void rotationElementDisappearedTest () throws InterruptedException {
+        WebElement Search = waitForElement(By.id("basic_long_titled_buttons"), 5);
+        driver.rotate(ScreenOrientation.LANDSCAPE);
+        Thread.sleep(2000);
+        waitForElementNotExists(By.id("basic_long_titled_buttons"), 5);
+        driver.rotate(ScreenOrientation.PORTRAIT);
     }
 
     @Test
-    public void loginFailed() {
-        WebElement loginBtn = waitForElement(By.id("view_announcement_action_positive"), 5);
-        loginBtn.click();
-        WebElement userNameInput = waitForElement(By.xpath("//*[contains(@text, 'Username')]"), 5);
-        userNameInput.click();
-        WebElement userNameInputText = waitForElement(By.xpath("//*[contains(@text, 'Username')]"), 5);
-        userNameInputText.sendKeys("12445");
-        WebElement passwordInput = waitForElement(By.xpath("//*[contains(@text, 'Password')]"), 5);
-        passwordInput.click();
-        WebElement passwordInputText = waitForElement(By.xpath("//*[contains(@text, 'Password')]"), 5);
-        passwordInputText.sendKeys("12445");
-        WebElement Login = waitForElement(By.id("login_button"), 5);
-        Login.click();
-        waitForElement(By.xpath("//*[contains(@text, 'Incorrect username or password entered.\n" +
-                "Please try again.')]"),5);
-        WebElement BackBtn = waitForElement(By.xpath("//*[contains(@content-desc, 'Navigate up')]"), 5);
-        BackBtn.click();
+    public void scrollToElementTest () {
+        scrollToElement(By.id("bottomsheet_dateTimePicker"), 20, Scroll.UP);
+    }
+
+    @Test
+    public void swipeElementTest() throws InterruptedException {
+        scrollToElement(By.id("colorChooser_primary_customRgb"), 20, Scroll.DOWN);
+        WebElement element = waitForElement(By.id("colorChooser_primary_customRgb"), 5);
+        element.click();
+        Thread.sleep(1000);
+        waitForElement(By.id("colorPresetGrid"),5);
+        swipeElement(By.id("colorPresetGrid"), SwipeDirection.LEFT);
+        waitForElementNotExists(By.id("colorPresetGrid"), 5);
+    }
+
+    @Test
+    public void backGroundTest (){
+        waitForElement(By.id("action_bar"), 1);
+        driver.runAppInBackground(Duration.ofSeconds(5));
+
     }
 
 
+
+    private void swipeElement(By by, SwipeDirection swipeDirection) {
+        WebElement element = waitForElement(by, 5);
+        int leftX = element.getLocation().getX();
+        int upperY = element.getLocation().getY();
+
+        int middleY = upperY + element.getSize().height/2;
+        int middleX = leftX + element.getSize().width/2;
+
+        int destinationX = swipeDirection == SwipeDirection.LEFT ? 0 : driver.manage().window().getSize().width;
+
+        TouchAction touchAction = new TouchAction(driver);
+        touchAction
+                .press(PointOption.point(middleX, middleY))
+                .waitAction(WaitOptions.waitOptions(Duration.ofSeconds(1)))
+                .moveTo(PointOption.point(destinationX, middleY))
+                .release()
+                .perform();
+
+
+    }
+
+    private void scrollToElement (By by, int maxScrolls, Scroll scroll) {
+        int scrollCount = 0;
+        while (driver.findElements(by).size() == 0) {
+            if (scrollCount > maxScrolls) {
+                waitForElement(by, 5);
+                return;
+            }
+            if (scroll == Scroll.UP) {
+                scrollQuickUp();
+            }
+            else scrollQuickDown();
+            scrollCount++;
+        }
+    }
+
+    private void scroll(int swipeTime, Scroll scroll) {
+        TouchAction touchAction = new TouchAction(driver);
+        Dimension size = driver.manage().window().getSize();
+        int x = size.width/2;
+        int startY = 0;
+        switch (scroll) {
+            case UP: startY = (int) (size.height*0.8);
+            break;
+            case DOWN: startY = (int) (size.height*0.2);
+            break;
+        }
+        int finishY = size.height - startY;
+        touchAction
+                .press(PointOption.point(x, startY))
+                .waitAction(WaitOptions.waitOptions(Duration.ofSeconds(swipeTime)))
+                .moveTo(PointOption.point(x, finishY))
+                .release()
+                .perform();
+    }
+
+    private void scrollQuickUp() {
+        scroll(1, Scroll.UP);
+    }
+
+    private void scrollQuickDown() {
+        scroll(1, Scroll.DOWN);
+    }
 
     private WebElement waitForElement(By by, int TimeOut) {
         WebDriverWait wait = new WebDriverWait(driver, TimeOut);
         return wait.until(ExpectedConditions.presenceOfElementLocated(by));
     }
 
-    private void SkipIntro(){
-        WebElement SkipButton = waitForElement(By.id("fragment_onboarding_skip_button"), 5);
-        SkipButton.click();
+    private boolean waitForElementNotExists(By by, int TimeOut) {
+        WebDriverWait wait = new WebDriverWait(driver, TimeOut);
+        return wait.until(ExpectedConditions.invisibilityOfElementLocated(by));
     }
+
 
 }
