@@ -25,15 +25,6 @@ import java.time.Duration;
 public class FirstTest {
     private AppiumDriver<MobileElement> driver;
 
-    private enum Scroll {
-        UP,
-        DOWN
-    }
-
-    private enum SwipeDirection {
-        LEFT, RIGHT
-    }
-
     @BeforeTest
     public void setUp() throws MalformedURLException {
         DesiredCapabilities caps = new DesiredCapabilities();
@@ -54,47 +45,47 @@ public class FirstTest {
     }
 
     @Test
-    public void PopUpNotExists() throws InterruptedException {
+    public void PopUpNotExistsTest() throws InterruptedException {
         WebElement BasicStackedBtn = waitForElement(By.id("basic_stacked_buttons"), 5);
         BasicStackedBtn.click();
-        WebElement MdBtnNgtv = waitForElement(By.id("md_button_negative"), 5);
-        MdBtnNgtv.click();
-        Thread.sleep(2000);
+        WebElement Md_BtnNegative = waitForElement(By.id("md_button_negative"), 5);
+        Md_BtnNegative.click();
         Assert.assertEquals(waitForElementNotExists(By.id("md_button_negative"), 5), true, "md_button_negative' not exists");
+        driver.resetApp();
     }
 
     @Test
     public void rotationElementDisappearedTest () throws InterruptedException {
         WebElement Search = waitForElement(By.id("basic_long_titled_buttons"), 5);
         driver.rotate(ScreenOrientation.LANDSCAPE);
-        Thread.sleep(2000);
         waitForElementNotExists(By.id("basic_long_titled_buttons"), 5);
-        driver.rotate(ScreenOrientation.PORTRAIT);
+        driver.resetApp();
     }
 
     @Test
     public void scrollToElementTest () {
         scrollToElement(By.id("bottomsheet_dateTimePicker"), 20, Scroll.UP);
+        driver.resetApp();
     }
 
     @Test
     public void swipeElementTest() throws InterruptedException {
-        scrollToElement(By.id("colorChooser_primary_customRgb"), 20, Scroll.DOWN);
+        scrollToElement(By.id("colorChooser_primary_customRgb"), 20, Scroll.UP);
         WebElement element = waitForElement(By.id("colorChooser_primary_customRgb"), 5);
         element.click();
-        Thread.sleep(1000);
         waitForElement(By.id("colorPresetGrid"),5);
         swipeElement(By.id("colorPresetGrid"), SwipeDirection.LEFT);
         waitForElementNotExists(By.id("colorPresetGrid"), 5);
+        driver.resetApp();
     }
 
     @Test
     public void backGroundTest (){
         waitForElement(By.id("action_bar"), 1);
         driver.runAppInBackground(Duration.ofSeconds(5));
+        driver.resetApp();
 
     }
-
 
 
     private void swipeElement(By by, SwipeDirection swipeDirection) {
